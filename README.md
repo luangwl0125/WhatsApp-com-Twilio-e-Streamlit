@@ -1,33 +1,24 @@
-﻿# WhatsApp-com-Twilio-e-Streamlit
-# WhatsApp com Twilio e Streamlit
+# 💬 WhatsApp com Twilio e Streamlit
 
-Aplicação para envio de mensagens via WhatsApp usando a API da Twilio e uma interface feita com Streamlit.
+Aplicação interativa para envio de mensagens WhatsApp via API Twilio com uma interface amigável feita em Streamlit.
 
-## Passos
+---
 
-1. Instale dependências:
-   pip install -r requirements.txt
+## ✅ Funcionalidades
 
-2. Renomeie `.env.example` para `.env` e adicione suas credenciais.
+- Envio de mensagens via WhatsApp (usando Twilio)
+- Registro automático de mensagens em banco de dados SQLite
+- Visualização de mensagens enviadas
+- Exportação do histórico em CSV
+- Limpeza total do histórico de mensagens
 
-3. Execute:
-   streamlit run main.py
+---
 
+## 🚀 Como usar
 
-☁️ Parte 2: Subir para o GitHub
+### 1. Clone o repositório
 
-1. Inicialize o repositório
-
-git init
-git add .
-git commit -m "Primeiro commit"
-
-
-2. Crie um repositório no GitHub manualmente (ou me peça ajuda).
-
-3. Adicione o repositório remoto e envie:
-git remote add origin https://github.com/seu-usuario/twilio-whatsapp-streamlit.git
-git branch -M main
-git push -u origin main
-
+```bash
+git clone https://github.com/luangwl0125/WhatsApp-com-Twilio-e-Streamlit.git
+cd WhatsApp-com-Twilio-e-Streamlit
 
