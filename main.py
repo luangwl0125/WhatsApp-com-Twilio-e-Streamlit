@@ -6,21 +6,19 @@ import io
 import sqlite3
 from datetime import datetime
 
-# Carregar variáveis de ambiente (local)
+# Carrega variáveis do .env local, se não vierem do ambiente (ex: Streamlit Cloud)
 if os.getenv("TWILIO_ACCOUNT_SID") is None:
     from dotenv import load_dotenv
     load_dotenv()
 
-# Variáveis de ambiente
+# Variáveis
 ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 FROM_WHATSAPP = os.getenv("FROM_WHATSAPP")
 TO_WHATSAPP = os.getenv("TO_WHATSAPP")
-
-# Twilio client
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
-# Conexão com SQLite
+# Banco de dados SQLite
 conn = sqlite3.connect("mensagens.db", check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute("""
@@ -33,41 +31,64 @@ CREATE TABLE IF NOT EXISTS mensagens (
 """)
 conn.commit()
 
-# Função para log
 def registrar_log(mensagem, sid):
     cursor.execute("INSERT INTO mensagens (mensagem, sid) VALUES (?, ?)", (mensagem, sid))
     conn.commit()
 
-# Interface Streamlit
-st.set_page_config(
-    page_title="Twilio WhatsApp",
-    page_icon="💬",
-    layout="centered"
-)
+# Tema e layout
+st.set_page_config(page_title="Twilio WhatsApp", page_icon="💬", layout="centered")
+
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #f5f5f5;
+    }
+    .css-18e3th9 {
+        padding-top: 2rem;
+    }
+    .stTextArea>div>textarea {
+        font-size: 18px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Logotipo
+if os.path.exists("logo.png"):
+    st.image("logo.png", width=200)
+
+st.title("💬 Envio de Mensagens via WhatsApp com Twilio")
+col1, col2 = st.columns([4, 1])
+with col1:
+    mensagem = st.text_area("Digite a mensagem:")
+with col2:
+    if st.button("📤 Enviar"):
+        try:
+            msg = client.messages.create(
+                body=mensagem,
+                from_=f"whatsapp:{FROM_WHATSAPP}",
+                to=f"whatsapp:{TO_WHATSAPP}"
+            )
+            st.success(f"Mensagem enviada! SID: {msg.sid}")
+            registrar_log(mensagem, msg.sid)
+        except Exception as e:
+            st.error(f"Erro: {e}")
 
 st.markdown("---")
 st.subheader("📋 Histórico de mensagens enviadas")
 
-# Exportar CSV
-if st.button("⬇️ Exportar histórico como CSV"):
+if st.button("⬇️ Exportar como CSV"):
     try:
         cursor.execute("SELECT timestamp, mensagem, sid FROM mensagens ORDER BY timestamp DESC")
         data = cursor.fetchall()
         if data:
             df = pd.DataFrame(data, columns=["Data", "Mensagem", "SID"])
             csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="Clique aqui para baixar o CSV",
-                data=csv,
-                file_name="historico_mensagens.csv",
-                mime="text/csv"
-            )
+            st.download_button("Clique aqui para baixar", data=csv, file_name="historico_mensagens.csv", mime="text/csv")
         else:
-            st.warning("Não há mensagens para exportar.")
+            st.warning("Nenhuma mensagem registrada.")
     except Exception as e:
-        st.error(f"Erro ao exportar CSV: {e}")
+        st.error(f"Erro: {e}")
 
-# Visualizar histórico
 try:
     cursor.execute("SELECT timestamp, mensagem, sid FROM mensagens ORDER BY timestamp DESC")
     rows = cursor.fetchall()
@@ -78,14 +99,13 @@ try:
     else:
         st.info("Nenhuma mensagem registrada ainda.")
 except Exception as e:
-    st.error(f"Erro ao carregar histórico: {e}")
+    st.error(f"Erro: {e}")
 
-# Limpar histórico
-if st.button("🗑️ Apagar todos os registros"):
+if st.button("🗑️ Apagar histórico"):
     try:
         cursor.execute("DELETE FROM mensagens")
         conn.commit()
-        st.success("Histórico apagado com sucesso.")
+        st.success("Histórico apagado.")
         st.experimental_rerun()
     except Exception as e:
-        st.error(f"Erro ao apagar histórico: {e}")
+        st.error(f"Erro: {e}")
